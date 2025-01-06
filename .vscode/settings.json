@@ -56,5 +56,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "InteraktivniSimulacijskiSustavi.sln"
+    "dotnet.defaultSolution": "Interaktivni-simulacijski-sustavi.sln"
 }

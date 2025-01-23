@@ -11,6 +11,8 @@ public class RocketController : MonoBehaviour
 
     public GameObject explosionPrefab;  
 
+    public AudioClip explosionSound;    
+    public AudioSource launcherAudioSource;
     public float thrustPower = 10f;       
     public float maxThrust = 50f;        
     public float rotationSpeed = 5f;     
@@ -18,6 +20,7 @@ public class RocketController : MonoBehaviour
     public float rotationDamping = 2f;   
     public float maxSpeed = 50f;         
 
+    public float explosionVolume = 4f;
     private float throttle;              
 
     private void Start(){
@@ -93,6 +96,30 @@ public class RocketController : MonoBehaviour
                 RocketLauncher rocketLauncher = FindObjectOfType<RocketLauncher>();
                 if (rocketLauncher != null){
                     rocketLauncher.SetExplosion(explosion);  
+                }
+
+                if (launcherAudioSource != null && launcherAudioSource.isPlaying)
+            {
+                launcherAudioSource.Stop();
+            }
+
+            if (explosionSound != null)
+            {
+                AudioSource audioSource = explosion.AddComponent<AudioSource>();
+                audioSource.clip = explosionSound;
+                audioSource.volume = explosionVolume; 
+                audioSource.Play();
+            }
+
+            }
+
+            
+            if (collision.gameObject.CompareTag("Tank"))
+            {
+                TankShooting tankShooting = collision.gameObject.GetComponent<TankShooting>();
+                if (tankShooting != null)
+                {
+                    tankShooting.DisableTank();
                 }
             }
 

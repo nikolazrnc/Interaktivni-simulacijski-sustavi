@@ -82,7 +82,13 @@ public class PlayerMovement : MonoBehaviour
         {
             rb.AddForce(moveDirection.normalized * moveSpeed * 10f * airMultiplier, ForceMode.Force);
         }
+
+        // Rotate the player model (parent object) to follow the camera's horizontal movement
+        float yRotation = orientation.eulerAngles.y;
+        transform.rotation = Quaternion.Euler(0f, yRotation, 0f);  // Apply rotation to the Player object (root)
     }
+
+    
 
     private void ControlSpeed()
     {

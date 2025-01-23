@@ -1,9 +1,11 @@
 using UnityEngine;
 
-public class RocketLauncher : MonoBehaviour{
+public class RocketLauncher : MonoBehaviour
+{
     public GameObject rocketPrefab;
     public Transform attackPoint;
-
+    public AudioClip explosionSound;    
+    public AudioClip playerShootSound;
     public GameObject explosionPrefab;
     public float rocketSpeed = 20f;
     public int magazineSize = 5;
@@ -17,26 +19,52 @@ public class RocketLauncher : MonoBehaviour{
 
     public Camera playerCamera;  
     public Camera rocketCamera;  
+    public Camera scopeCamera; 
 
-    private void Start(){
+    private bool isAiming = false;
+
+    private AudioSource audioSource;
+
+    private void Start()
+    {
         rocketsLeft = magazineSize;
-
         playerCamera.enabled = true;
         rocketCamera.enabled = false;
+        scopeCamera.enabled = false;
+        
+        audioSource = GetComponent<AudioSource>();
+        if (audioSource == null)
+        {
+            audioSource = gameObject.AddComponent<AudioSource>();
+        }  
     }
 
-    private void Update(){
-        if (Input.GetKeyDown(KeyCode.Mouse0) && rocketsLeft > 0 && !reloading && !rocketActive){
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Mouse0) && rocketsLeft > 0 && !reloading && !rocketActive)
+        {
             Shoot();
         }
 
-        if (Input.GetKeyDown(KeyCode.R) && rocketsLeft < magazineSize && !reloading){
+        if (Input.GetKeyDown(KeyCode.R) && rocketsLeft < magazineSize && !reloading)
+        {
             Reload();
+        }
+
+        if (Input.GetKey(KeyCode.Mouse1))
+        {
+            Aim();
+        }
+        else if (isAiming)
+        {
+            StopAiming();
         }
     }
 
-    private void Shoot(){
-        if (rocketPrefab == null || attackPoint == null){
+    private void Shoot()
+    {
+        if (rocketPrefab == null || attackPoint == null)
+        {
             return;
         }
         rocketsLeft--;
@@ -46,7 +74,8 @@ public class RocketLauncher : MonoBehaviour{
         currentRocket.transform.forward = attackPoint.right;
 
         Rigidbody rb = currentRocket.GetComponent<Rigidbody>();
-        if (rb == null){
+        if (rb == null)
+        {
             return;
         }
 
@@ -57,7 +86,8 @@ public class RocketLauncher : MonoBehaviour{
         rocketController.OnCrash += ResetCameraToPlayer;
         rocketController.rocketCamera = rocketCamera;
         rocketController.explosionPrefab = explosionPrefab;
-
+        
+        rocketController.explosionSound = explosionSound;
         Vector3 initialCameraPosition = currentRocket.transform.position - currentRocket.transform.forward * 4f + Vector3.up * 10f;
         rocketCamera.transform.position = initialCameraPosition;
 
@@ -66,29 +96,80 @@ public class RocketLauncher : MonoBehaviour{
 
         playerCamera.enabled = false;
         rocketCamera.enabled = true;
+        ToggleAudioListener(rocketCamera);
+
+        PlaySound(playerShootSound);
     }
 
-    private void Reload(){
+    private void Reload()
+    {
         reloading = true;
         Invoke(nameof(FinishReload), reloadTime);
     }
 
-    private void FinishReload(){
+    private void FinishReload()
+    {
         rocketsLeft = magazineSize;
         reloading = false;
     }
 
-    private void ResetCameraToPlayer(){  
-        if (currentExplosion != null){
+    private void ResetCameraToPlayer()
+    {  
+        if (currentExplosion != null)
+        {
             Destroy(currentExplosion, 3f);
         }
         playerCamera.enabled = true;
         rocketCamera.enabled = false;
 
         rocketActive = false;
+
+        playerCamera.enabled = true;
+        rocketCamera.enabled = false;
+        ToggleAudioListener(playerCamera);
+
+        rocketActive = false;
     }
 
-    public void SetExplosion(GameObject explosion){
-        currentExplosion = explosion; 
+    private void Aim()
+    {
+        isAiming = true;
+        scopeCamera.enabled = true;
+        playerCamera.enabled = false;  
+        ToggleAudioListener(scopeCamera);
     }
+
+    private void StopAiming()
+    {
+        isAiming = false;
+        playerCamera.enabled = true;
+        scopeCamera.enabled = false; 
+        ToggleAudioListener(playerCamera);
+    }
+
+    private void ToggleAudioListener(Camera activeCamera)
+    {
+        foreach (var listener in FindObjectsOfType<AudioListener>())
+        {
+            listener.enabled = false;
+        }
+        AudioListener activeListener = activeCamera.GetComponent<AudioListener>();
+        if (activeListener != null)
+        {
+            activeListener.enabled = true;
+        }
+    }
+
+    private void PlaySound(AudioClip clip)
+    {
+        if (audioSource != null && clip != null)
+        {
+            audioSource.PlayOneShot(clip);
+        }
+    }
+    public void SetExplosion(GameObject explosion)
+    {
+        currentExplosion = explosion;
+    }
+    
 }
